@@ -1,16 +1,5 @@
 import './card.css';
-
-const TIERS = {
-    COMMON: 'common',
-    RARE: 'rare',
-    EPIC: 'epic'
-};
-
-const TIER_COLORS = {
-    [TIERS.COMMON]: 'gray',
-    [TIERS.RARE]: 'green',
-    [TIERS.EPIC]: 'purple'
-}
+import { TIER_COLORS } from '../../definitions/consts';
 
 /*
  {
@@ -33,8 +22,30 @@ const TIER_COLORS = {
     }
 */
 
-function Card({type, stats, level, exp, tier, name}) {
+function Card({id, type, stats, level, tier, name, number, levelUpCard, money}) {
     const tierColor = TIER_COLORS[tier];
+
+    const computeNextLevelNumber = () => {
+        return Math.pow(2, level);
+    };
+
+    const computeLevelUpCost = () => {
+        return computeNextLevelNumber() * 50;
+    };
+
+    const canLevelUp = () => {
+        return computeNextLevelNumber() <= number;
+    };
+
+    const renderLevelUpButton = () => {
+        const hasMoney = money >= computeLevelUpCost();
+
+        return (
+            <button disabled={!hasMoney} onClick={() => {levelUpCard(tier, id, computeNextLevelNumber(), computeLevelUpCost())}} >
+                {computeLevelUpCost()}
+            </button>
+        );
+    };
 
     return (
         <div className="Card">
@@ -51,6 +62,12 @@ function Card({type, stats, level, exp, tier, name}) {
             <br/>
             <div class="Card-level">
                 Level: {level}
+            </div>
+            <div class="Card-levelup">
+                {number} / {computeNextLevelNumber()}
+            </div>
+            <div class="Card-levelUpCost">
+                {canLevelUp() ? renderLevelUpButton() : computeLevelUpCost()}
             </div>
 
         </div>

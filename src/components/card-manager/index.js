@@ -1,48 +1,18 @@
 import React from 'react';
 import './card-manager.css';
 import Card from '../card';
+import { fetchCards } from '../../services/card-service';
 
-const TYPES = {
-    ATTACK: 'attack',
-    DEFENSE: 'defense'
+const user = 
+{
+    username: 'mike',
+    cards: [
+        {id: 0, tier: 0, level: 2, number: 0},
+        {id: 0, tier: 1, level: 1, number: 1},
+        {id: 0, tier: 2, level: 4, number: 2}
+    ],
+    money: 3024
 };
-
-const UTILITIES = {
-    REGENERATION: 'regeneration'
-};
-
-const TIERS = {
-    COMMON: 'common',
-    RARE: 'rare',
-    EPIC: 'epic'
-};
-
-const cards = [
-    generateCard('Miguel', TYPES.ATTACK, TIERS.COMMON),
-    generateCard('Goirs', TYPES.DEFENSE, TIERS.RARE),
-    generateCard('Gornak', TYPES.ATTACK, TIERS.EPIC),
-];
-
-function generateCard(name, type, tier) {
-    return {
-        name: name,
-        type: type,
-        stats: {
-            attack: 1,
-            defense: 1,
-            utility: [UTILITIES.REGENERATION],
-            baseHP: 5
-        },
-        statsProjection: {
-            attack: 3,
-            defense: 2,
-            utility: [],
-            baseHP: 1
-        },
-        tier: tier,
-        level: 1
-    }
-}
 
 class CardManager extends React.Component {
 
@@ -50,20 +20,56 @@ class CardManager extends React.Component {
         super(...args);
 
         this.state = {
-            cards: cards
-        }
+            cards: [],
+            money: 0,
+            username: ''
+        };
+    }
+
+    async componentDidMount(props) {
+        this.setState({
+            username: user.username,
+            money: user.money,
+            cards: await fetchCards(user)
+        });
+    }
+
+    findCard(tier, id, cards) {
+        return cards.find(card => card.tier === tier && card.id === id);
+    }
+
+    levelUpCard = (tier, id, nextLevelNumber, updateCost) => {
+        const card = this.findCard(tier, id, this.state.cards);
+
+        card.level++;
+        card.number -= nextLevelNumber;
+
+        this.setState({
+            money: this.state.money - updateCost
+        });
     }
 
     _drawCards() {
-        return this.state.cards.map((card) => {
-            return <Card {...card} />;
+        return this.state.cards.map((card, index) => {
+            return <Card {...card} money={this.state.money} levelUpCard={this.levelUpCard} number={index + 1} />;
         });
     }
 
     render() {
+        const { money, username } = this.state;
+
         return (
             <div>
-                {this._drawCards()}
+                <section>
+                    <span>Money: {money}</span>
+                    <span> User: {username}</span>
+                    <button onClick= {() => { this.setState({money: money + 100}) }} >
+                        Add money
+                    </button>
+                </section>
+                <div>
+                    {this._drawCards()}
+                </div>
             </div>
         );
     } 
